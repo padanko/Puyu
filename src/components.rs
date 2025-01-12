@@ -4,7 +4,7 @@ use crossterm::ExecutableCommand;
 
 use std::error;
 use std::fs;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::process;
 
 use crate::defines;
@@ -16,6 +16,26 @@ pub fn exit(code: i32, message: &str) -> Result<(), Box<dyn error::Error>> {
     io::stdout().execute(cursor::Show)?;
     println!("{}", message);
     process::exit(code);
+}
+
+fn make_directory_dotpuyu() -> Result<(), Box<dyn error::Error>> {
+
+    if !fs::exists("./.puyu")? {
+        fs::create_dir("./.puyu")?;
+    }
+
+    Ok(())
+
+}
+
+fn file_view(filename: &str) -> Result<(), Box<dyn error::Error>>{
+    let mut file = fs::File::open(&filename)?;
+    let mut buffer = String::new();
+
+    file.read_to_string(&mut buffer)?;
+
+    print_(&buffer);
+    Ok(())
 }
 
 pub fn header_draw(text: &str) -> Result<(), Box<dyn error::Error>> {
@@ -105,7 +125,7 @@ pub fn keyboard_handle(
     Ok(())
 }
 
-pub fn command_process(command: &str) -> Result<(), Box<dyn error::Error>> {
+fn command_process(command: &str) -> Result<(), Box<dyn error::Error>> {
     if command.len() >= 2 {
         let initial: Vec<char> = command.chars().take(2).collect();
         let body: String = command.chars().skip(2).collect();
@@ -121,13 +141,22 @@ pub fn command_process(command: &str) -> Result<(), Box<dyn error::Error>> {
             header_draw(&format!("Puyu [File \"{}\" Opened]", &body))?;
             footer_draw("")?;
 
-            let mut file = fs::File::open(&body)?;
-            let mut buffer = String::new();
-
-            file.read_to_string(&mut buffer)?;
-
-            print_(&buffer);
+            file_view(&body)?;
         }
+
+        if initial == vec!['a','l'] && body.len() == 6 && (&body).chars().all(|c| c.is_digit(10)) {
+            let hour = &body[0..2];
+            let minute = &body[2..4];
+            let second = &body[4..6];
+
+            make_directory_dotpuyu()?;
+            
+            let mut file = fs::File::create("./.puyu/alerts")?;
+            file.write_all(format!("PUYU-ALTF {}:{}:{}", hour, minute, second).as_bytes())?;
+
+
+        }
+        
     }
     Ok(())
 }

@@ -36,15 +36,28 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     execute!(io::stdout(), terminal::Clear(terminal::ClearType::All))?;
 
     execute!(io::stdout(), cursor::MoveTo(0, 1))?;
-    components::print_("Welcome to Puyu");
+    components::print_("Welcome to Puyu!\n\n");
+    components::print_("[Commands]\n");
+    components::print_("    |- :fo<filename>    a Simple File Viewer\n");
+    components::print_("    '- :qu    quit.");
 
     execute!(io::stdout(), cursor::MoveTo(0, 0))?;
     components::header_draw("Puyu")?;
     components::footer_draw("")?;
+    
+    loop {
 
-    if let Err(result) = fn_keyboard() {
-        let _ = components::exit(1, &format!("{:?}", result));
+        if let Err(result) = fn_keyboard() {
+            execute!(io::stdout(), terminal::Clear(terminal::ClearType::All))?;
+            execute!(io::stdout(), cursor::MoveTo(0, 1))?;
+            components::print_("Welcome to Puyu!\n\n");
+            components::print_("[Commands]\n");
+            components::print_("    |- :fo<filename>    a Simple File Viewer\n");
+            components::print_("    '- :qu    quit.");
+        
+            execute!(io::stdout(), cursor::MoveTo(0, 0))?;
+            components::header_draw("Puyu")?;
+            components::footer_draw(&format!("{:?}", result))?;
+        }
     }
-
-    Ok(())
 }
