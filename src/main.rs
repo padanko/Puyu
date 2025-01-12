@@ -1,22 +1,22 @@
-use crossterm::terminal;
-use crossterm::event;
 use crossterm::cursor;
+use crossterm::event;
 use crossterm::execute;
+use crossterm::terminal;
+use crossterm::ExecutableCommand;
 
 use std::error;
-use std::time::Duration;
 use std::io;
+use std::time::Duration;
 
 mod components;
 mod defines;
 
-
 fn fn_keyboard() -> Result<(), Box<dyn error::Error>> {
     let mut buffer = String::new();
-    let mut mode = defines::KeyBoard_InputMode::default;
+    let mut mode = defines::KeyboardInputmode::Default;
     let mut cursor = 0;
     loop {
-        if mode == defines::KeyBoard_InputMode::default {
+        if mode == defines::KeyboardInputmode::Default {
             components::footer_draw("")?;
         }
         if event::poll(Duration::from_millis(100))? {
@@ -27,20 +27,24 @@ fn fn_keyboard() -> Result<(), Box<dyn error::Error>> {
     }
 }
 
-
-
-
 // 伝説的なアプリケーションの幕開けだ...!
 fn main() -> Result<(), Box<dyn error::Error>> {
     terminal::enable_raw_mode()?;
 
-    execute!(io::stdout(), terminal::Clear(terminal::ClearType::All))?;       
-    execute!(io::stdout(), cursor::MoveTo(0,1))?;
+    io::stdout().execute(cursor::Hide)?;
 
+    execute!(io::stdout(), terminal::Clear(terminal::ClearType::All))?;
+
+    execute!(io::stdout(), cursor::MoveTo(0, 1))?;
+    components::print_("Welcome to Puyu");
+
+    execute!(io::stdout(), cursor::MoveTo(0, 0))?;
     components::header_draw("Puyu")?;
     components::footer_draw("")?;
 
-    fn_keyboard()?;
+    if let Err(result) = fn_keyboard() {
+        let _ = components::exit(1, &format!("{:?}", result));
+    }
 
     Ok(())
 }
