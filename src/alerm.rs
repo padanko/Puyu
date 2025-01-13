@@ -1,4 +1,5 @@
 use chrono::{Local, Timelike};
+use rodio::{Decoder, OutputStream};
 
 use std::io::Read;
 use std::thread::sleep;
@@ -25,12 +26,13 @@ fn alerts_check(joined_time: &str) -> Result<bool, Box<dyn std::error::Error>>{
 
     file.read_to_string(&mut file_buffer)?;
 
-    let time_: String = file_buffer.chars().skip(10).collect();
+    let time: String = file_buffer.chars().skip(10).collect();
 
-    Ok(time_ == joined_time)
+    Ok(time == joined_time)
 }
 
 pub fn run_pending() -> Result<(), Box<dyn std::error::Error>> {
+
     loop {
         let hour = now_hour();
         let minute = now_minute();
@@ -39,13 +41,15 @@ pub fn run_pending() -> Result<(), Box<dyn std::error::Error>> {
         let joined = format!("{}:{}:{}", hour, minute, second);
 
         if alerts_check(&joined)? {
-            components::footer_draw("Alerm!!!")?;
-            for _ in 0..50 {
-                print!("\x07");
-                sleep(Duration::from_millis(100));
-            }
+            components::footer_draw("Alerm")?;
+            let file = fs::File::open("./.puyu/alerm.wav")?;
+            let (_stream, handle) = OutputStream::try_default()?;
+            let sink = rodio::Sink::try_new(&handle)?;
+            let source = Decoder::new(std::io::BufReader::new(file))?;
+            sink.append(source);
+            sink.sleep_until_end();
         }
 
-        sleep(Duration::from_millis(200));
+        sleep(Duration::from_millis(10));
     }
 }

@@ -30,13 +30,12 @@ fn fn_keyboard() -> Result<(), Box<dyn error::Error>> {
 // 伝説的なアプリケーションの幕開けだ...!
 fn main() -> Result<(), Box<dyn error::Error>> {
 
-    println!("[\tOK\t]\t\tAlermSystem StartUP");
-
-    terminal::enable_raw_mode()?;
-
     thread::spawn(|| {
         let _ = alerm::run_pending();
     });
+    println!("[\tOK\t]\t\tAlermSystem StartUP");
+
+    terminal::enable_raw_mode()?;
 
     io::stdout().execute(cursor::Hide)?;
 
