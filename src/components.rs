@@ -33,7 +33,7 @@ fn make_directory_dotpuyu() -> Result<(), Box<dyn error::Error>> {
 }
 
 fn file_view(filename: &str) -> Result<(), Box<dyn error::Error>>{
-    let mut file = fs::File::open(&filename)?;
+    let mut file = fs::File::open(filename)?;
     let mut buffer = String::new();
 
     file.read_to_string(&mut buffer)?;
@@ -149,7 +149,7 @@ fn command_process(command: &str) -> Result<(), Box<dyn error::Error>> {
             file_view(&body)?;
         }
 
-        if initial == vec!['a','l'] && body.len() == 6 && (&body).chars().all(|c| c.is_digit(10)) {
+        if initial == vec!['a','l'] && body.len() == 6 && body.chars().all(|c| c.is_ascii_digit()) {
             let hour = &body[0..2];
             let minute = &body[2..4];
             let second = &body[4..6];

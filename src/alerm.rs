@@ -27,7 +27,7 @@ fn alerts_check(joined_time: &str) -> Result<bool, Box<dyn std::error::Error>>{
 
     let time_: String = file_buffer.chars().skip(10).collect();
 
-    Ok(&time_ == joined_time)
+    Ok(time_ == joined_time)
 }
 
 pub fn run_pending() -> Result<(), Box<dyn std::error::Error>> {
