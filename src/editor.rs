@@ -78,7 +78,7 @@ pub fn run(code: &str) -> Result<(), Box<dyn std::error::Error>>{
                 file.write_all(buffer.as_bytes())?;
             }
 
-            if c == 'r' {
+            if c == 'R' {
                 buffer = String::new();
             }
         }
