@@ -7,19 +7,19 @@ use crossterm::ExecutableCommand;
 use std::error;
 use std::io;
 use std::time::Duration;
+use std::thread;
 
 mod components;
 mod defines;
+mod alerm;
+mod editor;
 
 fn fn_keyboard() -> Result<(), Box<dyn error::Error>> {
     let mut buffer = String::new();
     let mut mode = defines::KeyboardInputmode::Default;
     let mut cursor = 0;
     loop {
-        if mode == defines::KeyboardInputmode::Default {
-            components::footer_draw("")?;
-        }
-        if event::poll(Duration::from_millis(100))? {
+        if event::poll(Duration::from_millis(0))? {
             if let event::Event::Key(key_event) = event::read()? {
                 components::keyboard_handle(key_event.code, &mut mode, &mut buffer, &mut cursor)?;
             }
@@ -29,19 +29,23 @@ fn fn_keyboard() -> Result<(), Box<dyn error::Error>> {
 
 // 伝説的なアプリケーションの幕開けだ...!
 fn main() -> Result<(), Box<dyn error::Error>> {
+
+    println!("[\tOK\t]\t\tAlermSystem StartUP");
+
     terminal::enable_raw_mode()?;
+
+    thread::spawn(|| {
+        let _ = alerm::run_pending();
+    });
 
     io::stdout().execute(cursor::Hide)?;
 
     execute!(io::stdout(), terminal::Clear(terminal::ClearType::All))?;
-
+    execute!(io::stdout(), terminal::EnterAlternateScreen)?;
     execute!(io::stdout(), cursor::MoveTo(0, 1))?;
     components::print_("Welcome to Puyu!\n\n");
-    components::print_("[Commands]\n");
-    components::print_("    |- :fo<filename>    a Simple File Viewer\n");
-    components::print_("    '- :qu    quit.");
+    components::print_("");
 
-    execute!(io::stdout(), cursor::MoveTo(0, 0))?;
     components::header_draw("Puyu")?;
     components::footer_draw("")?;
     
@@ -50,12 +54,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         if let Err(result) = fn_keyboard() {
             execute!(io::stdout(), terminal::Clear(terminal::ClearType::All))?;
             execute!(io::stdout(), cursor::MoveTo(0, 1))?;
-            components::print_("Welcome to Puyu!\n\n");
-            components::print_("[Commands]\n");
-            components::print_("    |- :fo<filename>    a Simple File Viewer\n");
-            components::print_("    '- :qu    quit.");
         
-            execute!(io::stdout(), cursor::MoveTo(0, 0))?;
             components::header_draw("Puyu")?;
             components::footer_draw(&format!("{:?}", result))?;
         }
