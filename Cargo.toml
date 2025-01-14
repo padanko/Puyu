@@ -1,12 +1,12 @@
 [package]
 name = "Puyu"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 
 [dependencies]
 chrono = "0.4.39"
 crossterm = "0.28.1"
-rodio = "0.20.1"
+tokio = {version = "1.43.0", features = ["full"]}
 
 [profile.release]
 debug = 0
