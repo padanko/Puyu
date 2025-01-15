@@ -14,19 +14,22 @@ use crossterm::execute;
 mod models;
 mod components;
 
-
+// キーバインドについてはmodels/keybinds.rsを参照
 async fn keyboard_fn(
-    buffers: Arc<Mutex<Vec<buffer::ViewBuffer>>>,
-    mut selected_buffer: usize,
+    buffers: Arc<Mutex<Vec<buffer::ViewBuffer>>>
 ) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut lines = 0 ;
+
+    let mut selected_buffer = 0;
+
 
     loop {
         if event::poll(tokio::time::Duration::from_millis(500))? {
             if let event::Event::Key(event::KeyEvent { code, modifiers, .. }) = event::read()? {
                 let mut buffers = buffers.lock().await;
-                if let Some(buffer) = buffers.get_mut(selected_buffer) {
+                let buffers_length = buffers.len();
+                if let Some(mut buffer) = buffers.get_mut(selected_buffer) {
                    
                     if modifiers == keybinds::KB_CTRL {
                         match code {
@@ -55,6 +58,16 @@ async fn keyboard_fn(
                                 for _ in 0..5 {
                                     buffer.cur_move_right();
                                 }
+                            },
+                            keybinds::KB_SELECT_BUFFER_LEFT => {
+                                selected_buffer = selected_buffer.saturating_sub(1);
+                                buffer = buffers.get_mut(selected_buffer).unwrap();
+                            },
+                            keybinds::KB_SELECT_BUFFER_RIGHT => {
+                                if selected_buffer < buffers_length-1 {
+                                    selected_buffer += 1;
+                                }
+                               buffer =  buffers.get_mut(selected_buffer).unwrap();
                             },
                             _ => {}
                         }
@@ -94,7 +107,7 @@ async fn keyboard_fn(
                     // レンダリング
                     execute!(stdout(), terminal::Clear(terminal::ClearType::All))?; // 全部消す
                     components::buffer_rendering::rendering( buffer, lines).await?;
-                    components::render::render_footer("Puyu 1.1").await?;
+                    components::render::render_footer(&format!("Puyu Editor   -   {}", buffer.filename)).await?;
                                         
                 }
             }
@@ -112,16 +125,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     // ファイルの編集に使うバッファー
     let mut buffers: Vec<models::buffer::ViewBuffer> = Vec::new();
     
-    buffers.push(buffer::ViewBuffer::new("tmp.txt"));
-
-    let selected_buffer: usize = 0;
+    for i in 0..10 {
+        buffers.push(buffer::ViewBuffer::new(&format!("tmp{}.txt", i+1)));
+    }
 
     // Rawモードを起動したりカーソルの位置を変えたりする
     components::initial::start().await?;
 
-    components::render::render_footer("Puyu 1.1").await?;
+    components::render::render_footer("Welcome to Puyu Editor").await?;
 
-    if let Err(_) = keyboard_fn(Arc::new(Mutex::new(buffers)), selected_buffer).await {
+    if let Err(_) = keyboard_fn(Arc::new(Mutex::new(buffers))).await {
 
         components::initial::exit().await?;
 
