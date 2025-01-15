@@ -46,16 +46,16 @@ async fn keyboard_fn(
                                 buffer.buffer = "".into();
                                 fp.read_to_string(&mut buffer.buffer).await?;
                             },
-                            keybinds::KB_PAGEDOWN => {
-                                let max_line = buffer.buffer.split('\n').collect::<Vec<&str>>().len();
-
-                                if lines < max_line {
-                                    lines += 1;
+                            event::KeyCode::Left => {
+                                for _ in 0..5 {
+                                    buffer.cur_move_left();
                                 }
                             },
-                            keybinds::KB_PAGEUP => {
-                                lines = lines.saturating_sub(1);
-                            }
+                            event::KeyCode::Right => {
+                                for _ in 0..5 {
+                                    buffer.cur_move_right();
+                                }
+                            },
                             _ => {}
                         }
                     }
@@ -73,8 +73,19 @@ async fn keyboard_fn(
                             event::KeyCode::Right => {
                                 buffer.cur_move_right();
                             }
+
                             event::KeyCode::Backspace => {
                                 buffer.remove_char();
+                            },
+                            event::KeyCode::Down => {
+                                let max_line = buffer.buffer.split('\n').collect::<Vec<&str>>().len();
+
+                                if lines < max_line {
+                                    lines += 1;
+                                }
+                            },
+                            event::KeyCode::Up => {
+                                lines = lines.saturating_sub(1);
                             }
                             _ => {}
                         }
